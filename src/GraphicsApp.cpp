@@ -3,7 +3,11 @@
 #include "Object.hpp"
 
 int GNumberOfVertices = 0;
-bool wireframeMode = false;
+int mouseX, mouseY;
+float timeLoop = 0.0f;
+const int desiredFrameRate = 90;
+const int frameDuration = 1000 / desiredFrameRate;
+
 
 void GraphicsApp::GetOpenGLVersionInfo() {
     std::cout << "Vendor: " << glGetString(GL_VENDOR) << std::endl;
@@ -63,46 +67,20 @@ void GraphicsApp::IntializeProgram() {
 }
 
 void GraphicsApp::VertexSpecification() {
-    /* const std::vector<GLfloat> vertexData{
-        //0 Vertex
-        -0.5f, -0.5f, 0.0f, //Left Pos
-        1.0f, 0.0f, 0.0f, //Left Color
-        //1 Vertex
-        0.5f, -0.5f, 0.0f, //Right Pos
-        0.0f, 1.0f, 0.0f, //Right Color
-        //2 Vertex
-        -0.5f, 0.5f, 0.0f, //Top Pos
-        0.0f, 0.0f, 1.0f, //Top Color
-        //3 Vertex
-        0.5f, 0.5f, 0.0f, //Top Pos
-        0.0f, 0.0f, 1.0f, //Top Color                     
-    }; */
+    //Not using a .obj file
+    //Creating a simple rectanggle
+    const std::vector<GLfloat> vertexData {
+        // positions          // texture coords
+        1.0f,  1.0f, 0.0f,   1.0f, 1.0f, // top right
+        1.0f, -1.0f, 0.0f,   1.0f, 0.0f, // bottom right
+        -1.0f, -1.0f, 0.0f,   0.0f, 0.0f, // bottom left
+        -1.0f,  1.0f, 0.0f,   0.0f, 1.0f  // top left 
+    };
 
-    /* const std::vector<GLfloat> vertexData{
-        -0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f,
-        0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 0.0f,
-        0.5f,  0.5f, -0.5f, 0.0f, 0.0f, 1.0f,
-        -0.5f,  0.5f, -0.5f, 1.0f, 0.0f, 0.0f,
-        -0.5f, -0.5f,  0.5f, 0.0f, 1.0f, 0.0f,
-        0.5f, -0.5f,  0.5f, 0.0f, 0.0f, 1.0f,
-        0.5f,  0.5f,  0.5f, 1.0f, 0.0f, 0.0f,
-        -0.5f,  0.5f,  0.5f, 0.0f, 1.0f, 0.0f,                   
-    }; */
-
-    /* const std::vector<GLfloat> vertexData{
-        -0.5f, -0.5f, -0.5f,
-        0.5f, -0.5f, -0.5f,
-        0.5f,  0.5f, -0.5f,
-        -0.5f,  0.5f, -0.5f,
-        -0.5f, -0.5f,  0.5f,
-        0.5f, -0.5f,  0.5f,
-        0.5f,  0.5f,  0.5f,
-        -0.5f,  0.5f,  0.5f,                
-    }; */
-
-    Object bunny("./src/ObjFiles/ver1.obj");
-
-    const std::vector<GLfloat> vertexData(bunny.vertices());
+    const std::vector<GLuint> indexBufferData {
+        0, 1, 3, // first triangle
+        1, 2, 3  // second triangle
+    };
 
     glGenVertexArrays(1, &gVertexArrayObject);
     //Selecting
@@ -112,9 +90,6 @@ void GraphicsApp::VertexSpecification() {
     glBindBuffer(GL_ARRAY_BUFFER, gVertexBufferObject);
     glBufferData(GL_ARRAY_BUFFER, vertexData.size() * sizeof(GLfloat), vertexData.data(), GL_STATIC_DRAW);
 
-   
-
-    const std::vector<GLuint> indexBufferData(bunny.indices());
 
     GNumberOfVertices = indexBufferData.size();
                                                 
@@ -124,10 +99,10 @@ void GraphicsApp::VertexSpecification() {
 
 
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(GL_FLOAT) * 6, (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(GL_FLOAT) * 5, (GLvoid*)0);
     
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(GL_FLOAT) * 6, (GLvoid*)(sizeof(GL_FLOAT)*3));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(GL_FLOAT) * 5, (GLvoid*)(sizeof(GL_FLOAT)*3));
 
     glBindVertexArray(0);    
     glDisableVertexAttribArray(0);
@@ -144,6 +119,7 @@ void GraphicsApp::LoadShaders() {
 
 void GraphicsApp::Input(){
     SDL_Event event;
+    timeLoop += 0.01f;
 
     // (1) Handle Input
     // Start our event loop
@@ -151,46 +127,14 @@ void GraphicsApp::Input(){
         // Handle each specific event
         if(event.type == SDL_QUIT){
             gQuit= true;
+        } else if (event.type == SDL_MOUSEBUTTONDOWN || event.type == SDL_MOUSEMOTION) {
+            if (event.button.button == SDL_BUTTON_LEFT) {
+                
+                SDL_GetMouseState(&mouseX, &mouseY);
+            }
         }
 
-        const Uint8 *state = SDL_GetKeyboardState(NULL);
-        if (state[SDL_SCANCODE_UP])
-        {
-            m_uOffset += 0.01f;
-            std::cout << "Offset: " << m_uOffset << std::endl;
-        }
 
-        if (state[SDL_SCANCODE_DOWN])
-        {
-            m_uOffset -= 0.01f;
-            std::cout << "Offset: " << m_uOffset << std::endl;
-        }
-        
-        if (state[SDL_SCANCODE_LEFT])
-        {
-            m_uRotation -= 1.00f;
-            std::cout << "Rotation: " << m_uRotation << std::endl;
-        }
-
-        if (state[SDL_SCANCODE_RIGHT])
-        {
-            m_uRotation += 1.00f;
-            std::cout << "Rotation: " << m_uRotation << std::endl;
-        }
-
-        if (event.type == SDL_KEYDOWN)
-        {
-            switch (event.key.keysym.sym) {
-                    case SDLK_w:
-                        // Handle 'W' key press here
-                        printf("W key pressed!\n");
-                        wireframeMode = !wireframeMode;
-                        break;
-                    default:
-                        break;
-            
-             }
-        }
         
     }
 }
@@ -205,46 +149,10 @@ void GraphicsApp::PreDraw() {
 
     glUseProgram(gGraphicsPipelineShaderProgram);
 
-    //Translation
-
-    glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, m_uOffset));
-
-    GLint u_modelMatrixLocation = glGetUniformLocation(gGraphicsPipelineShaderProgram, "u_ModelMatrix");
-
-    //Rotation
-
-    model = glm::rotate(model, glm::radians(m_uRotation), glm::vec3(0.0f, 1.0f, 0.0f));
-
-    if (u_modelMatrixLocation >= 0)
-    {
-        glUniformMatrix4fv(u_modelMatrixLocation, 1, GL_FALSE, &model[0][0]);
-    } else {
-        std::cout << "No location found" << std::endl;
-    }
-
-    //Perspective
-
-    glm::mat4 perspective = glm::perspective(glm::radians(45.0f), (float)m_screenWidth/(float)m_screenHeight, 0.1f, 10.0f);
-
-    GLint u_perspectiveLocation = glGetUniformLocation(gGraphicsPipelineShaderProgram, "u_PerspectiveMatrix");
-
-    if (u_perspectiveLocation >= 0)
-    {
-        glUniformMatrix4fv(u_perspectiveLocation, 1, GL_FALSE, &perspective[0][0]);
-    } else {
-        std::cout << "No location found" << std::endl;
-    }
-
-    GLint isWireframeModeLocation = glGetUniformLocation(gGraphicsPipelineShaderProgram, "isWireframeMode");
-
-    //WireFrame Mode
-
-    if (isWireframeModeLocation >= 0)
-    {
-        glUniform1i(isWireframeModeLocation, wireframeMode);
-    } else {
-        std::cout << "No location found" << std::endl;
-    }
+    glm::vec2 interactionPoint = glm::vec2(mouseX / (float)m_screenWidth, 1.0f - mouseY / (float)m_screenHeight);
+    glUniform2fv(glGetUniformLocation(gGraphicsPipelineShaderProgram, "interactionPoint"), 1, glm::value_ptr(interactionPoint));
+    glUniform1f(glGetUniformLocation(gGraphicsPipelineShaderProgram, "time"), timeLoop);
+    
     
 }
 
@@ -252,19 +160,9 @@ void GraphicsApp::Draw() {
 
     glBindVertexArray(gVertexArrayObject);
     glBindBuffer(GL_ARRAY_BUFFER, gVertexBufferObject);
-
-    //glDrawArrays(GL_TRIANGLES, 0, 6);
-    if (wireframeMode)
-    {
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    } else
-    {
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    }
-    
     
 
-    glDrawElements(GL_TRIANGLES, GNumberOfVertices, GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
     
 
 }
@@ -279,6 +177,8 @@ void GraphicsApp::Initialize() {
 
 void GraphicsApp::MainLoop() {
     while (!gQuit) {
+        Uint32 frameStart = SDL_GetTicks();
+
         Input();
         
         PreDraw();
@@ -286,6 +186,14 @@ void GraphicsApp::MainLoop() {
         Draw();
 
         SDL_GL_SwapWindow(gGraphicsApplicationWindow);
+
+        Uint32 frameEnd = SDL_GetTicks();
+        Uint32 frameTime = frameEnd - frameStart;
+        int delayTime = frameDuration - frameTime;
+
+        if (delayTime > 0) {
+            SDL_Delay(delayTime);
+        }
     }
 }
 
