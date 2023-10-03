@@ -1,19 +1,13 @@
 #version 410 core
 
 
-layout(location=0) in vec3 position;
-layout(location = 1) in vec3 inNormal;
+layout(location = 0) in vec3 inPosition; // Vertex position
+layout(location = 1) in vec2 inTexCoord; // Texture coordinate
 
-out vec3 fragNormal;
-
-uniform mat4 u_ModelMatrix;
-uniform mat4 u_PerspectiveMatrix;
+out vec2 fragTexCoord;
 
 void main()
 {
-    fragNormal = inNormal;
-
-    vec4 newPosition = u_PerspectiveMatrix * u_ModelMatrix * vec4(position, 1.0f);
-    
-    gl_Position = vec4(newPosition.x, newPosition.y, newPosition.z, newPosition.w);
+    gl_Position = vec4(inPosition, 1.0);
+    fragTexCoord = inTexCoord;
 }
