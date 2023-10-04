@@ -3,6 +3,8 @@
 
 This project demonstrates a water ripple effect using OpenGL and GLSL. The effect is triggered by user interaction, specifically mouse clicks, which generate ripples on the water surface. Each ripple gradually fades away over time, creating a realistic water interaction effect. The ripple's intensity and fading are controlled by a fragment shader, part of a broader graphics pipeline managed in C++.
 
+https://github.com/Nowwin/Water-Ripple-Shader/assets/36608434/a8819d80-f31d-4116-a983-b7724e4cd6ae
+
 ## Features
 - Water Ripple Effect: Realistic water ripple effect triggered by mouse clicks.
 - Smooth Transitions: Utilizes the smoothstep function in the fragment shader to create smooth transitions in the ripple intensity, enhancing the visual appeal of the effect.
@@ -17,6 +19,7 @@ To build the project, simply run the `build.py` script:
 python build.py
 This will compile the project into an executable.
 ```
+
 
 ## Details
 The core of the ripple effect lies in the GLSL fragment shader, defined below:
