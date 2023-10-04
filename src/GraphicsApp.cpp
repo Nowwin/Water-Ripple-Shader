@@ -2,11 +2,16 @@
 #include "ShaderLoader.hpp"
 #include "Object.hpp"
 
+//Global List
 int GNumberOfVertices = 0;
 int mouseX, mouseY;
 float timeLoop = 0.0f;
+float currentTime;
 const int desiredFrameRate = 90;
 const int frameDuration = 1000 / desiredFrameRate;
+bool rippleActive = false;
+float rippleStartTime = 0.0f;
+GLfloat decayRateValue = 0.1f;
 
 
 void GraphicsApp::GetOpenGLVersionInfo() {
@@ -120,6 +125,7 @@ void GraphicsApp::LoadShaders() {
 void GraphicsApp::Input(){
     SDL_Event event;
     timeLoop += 0.01f;
+    rippleActive = false;
 
     // (1) Handle Input
     // Start our event loop
@@ -131,6 +137,8 @@ void GraphicsApp::Input(){
             if (event.button.button == SDL_BUTTON_LEFT) {
                 
                 SDL_GetMouseState(&mouseX, &mouseY);
+                rippleActive = true;
+                rippleStartTime = SDL_GetTicks() / 1000.0f;
             }
         }
 
@@ -152,7 +160,18 @@ void GraphicsApp::PreDraw() {
     glm::vec2 interactionPoint = glm::vec2(mouseX / (float)m_screenWidth, 1.0f - mouseY / (float)m_screenHeight);
     glUniform2fv(glGetUniformLocation(gGraphicsPipelineShaderProgram, "interactionPoint"), 1, glm::value_ptr(interactionPoint));
     glUniform1f(glGetUniformLocation(gGraphicsPipelineShaderProgram, "time"), timeLoop);
-    
+
+    GLint rippleStartTimeLocation = glGetUniformLocation(gGraphicsPipelineShaderProgram, "rippleStartTime");
+    if (rippleStartTimeLocation != -1) {
+           
+        } else {
+            std::cerr << "Uniform 'rippleStartTime' not found in shader." << std::endl;
+    }
+
+    glUniform1f(rippleStartTimeLocation, rippleStartTime);
+
+    GLint decayRateLocation = glGetUniformLocation(gGraphicsPipelineShaderProgram, "decayRate");
+    glUniform1f(decayRateLocation, decayRateValue);    
     
 }
 
